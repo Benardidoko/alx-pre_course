@@ -1,0 +1,111 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define BOARD_SIZE 40
+#define NUM_PLAYERS 4
+#define NUM_PIECES 4
+
+/**
+ * rollDie - Roll a six-sided die.
+ *
+ * Return: A random number between 1 and 6.
+ */
+int rollDie(void)
+{
+    return rand() % 6 + 1;
+}
+
+/**
+ * isValidMove - Check if a move is valid.
+ * @piecePosition: Current position of the game piece.
+ * @roll: Number rolled on the die.
+ *
+ * Return: 1 if the move is valid, 0 otherwise.
+ */
+int isValidMove(int piecePosition, int roll)
+{
+    return piecePosition + roll <= BOARD_SIZE;
+}
+
+int main(void)
+{
+    srand(time(NULL));
+
+    int board[BOARD_SIZE]; // Represents the board with player positions
+    int players[NUM_PLAYERS][NUM_PIECES]; // Player positions for each piece
+    int currentPlayer = 0; // Index of the current player (0 to NUM_PLAYERS - 1)
+    int roll;
+
+    // Initialize the board and player positions
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        board[i] = -1; // -1 indicates an empty square
+    }
+
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        for (int j = 0; j < NUM_PIECES; j++) {
+            players[i][j] = -1; // -1 indicates a piece in the starting area
+        }
+    }
+
+    // Main game loop
+    int gameWon = 0;
+    while (!gameWon) {
+        printf("Player %d's turn\n", currentPlayer + 1);
+        printf("Press Enter to roll the die...");
+        getchar(); // Wait for the user to press Enter
+
+        roll = rollDie();
+        printf("You rolled a %d\n", roll);
+
+        // Select a piece to move
+        int pieceToMove;
+        do {
+            printf("Enter the piece number (0 to 3): ");
+            scanf("%d", &pieceToMove);
+        } while (pieceToMove < 0 || pieceToMove >= NUM_PIECES);
+
+        // Check if the move is valid
+        int currentPosition = players[currentPlayer][pieceToMove];
+        if (currentPosition == -1 && roll == 6) {
+            // Move a piece from the starting area onto the board
+            currentPosition = 0;
+        } else if (!isValidMove(currentPosition, roll)) {
+            printf("Invalid move. Try again.\n");
+            continue;
+        }
+
+        // Move the piece
+        int newPosition = (currentPosition + roll) % BOARD_SIZE;
+        players[currentPlayer][pieceToMove] = newPosition;
+        board[newPosition] = currentPlayer;
+
+        // Check for a winning condition
+        int piecesInHome = 0;
+        for (int i = 0; i < NUM_PIECES; i++) {
+            if (players[currentPlayer][i] == BOARD_SIZE - 1) {
+                piecesInHome++;
+            }
+        }
+        if (piecesInHome == NUM_PIECES) {
+            printf("Player %d wins!\n", currentPlayer + 1);
+            gameWon = 1;
+        }
+
+        // Print the current state of the board
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            if (board[i] == -1) {
+                printf(".");
+            } else {
+                printf("%d", board[i] + 1); // Print the player number
+            }
+        }
+        printf("\n");
+
+        // Switch to the next player
+        currentPlayer = (currentPlayer + 1) % NUM_PLAYERS;
+    }
+
+    return 0;
+}
+
